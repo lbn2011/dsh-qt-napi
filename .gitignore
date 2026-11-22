@@ -1,0 +1,9 @@
+# Build output — never commit the compiled addon except through prebuild/.
+node_modules/
+build/
+*.o
+*.obj
+*.log
+
+# prebuild/ IS committed on purpose: shipped binaries live there.
+!prebuild/

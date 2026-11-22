@@ -1,0 +1,33 @@
+{
+  "name": "dsh-qt-napi",
+  "version": "0.1.0",
+  "description": "cmark-gfm N-API binding for the DSH Qt profile: Markdown to MarkdownNode JSON / HTML without a browser engine",
+  "license": "MIT",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "gypfile": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "binding.gyp",
+    "scripts/",
+    "src/",
+    "vendor/",
+    "prebuild/",
+    "README.md"
+  ],
+  "scripts": {
+    "install": "node scripts/install.mjs",
+    "build": "node scripts/build.mjs",
+    "build:debug": "node scripts/build.mjs --debug",
+    "test": "node --test test/*.test.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.9.2"
+  }
+}

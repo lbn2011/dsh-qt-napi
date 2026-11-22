@@ -1,0 +1,92 @@
+name: dsh-qt-napi
+
+# Builds the cmark-gfm N-API addon on every supported OS and publishes the
+# resulting `prebuild/<triple>/qt-bridge.node` binaries as artifacts.
+#
+# NOTE: this file lives inside the `dsh-qt-napi/` package because that directory
+# is destined to become its own repository. GitHub only executes workflows under
+# the repository root's `.github/workflows/`, so until the package is split out
+# this file is documentation + a ready-to-use definition, not an active job.
+
+on:
+  push:
+    branches: [main, 'dev/**']
+    paths:
+      - '**'
+  pull_request:
+    paths:
+      - '**'
+  workflow_dispatch:
+
+concurrency:
+  group: dsh-qt-napi-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-14]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # node-gyp needs Python 3 on every runner; the Windows image's default
+      # python is not always on PATH under Git Bash.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies (no build scripts yet)
+        run: npm install --ignore-scripts
+
+      - name: Show toolchain
+        run: |
+          node --version
+          npm --version
+          npx --yes node-gyp@11 --version
+          python3 --version || python --version
+
+      - name: Build addon and stage prebuild
+        env:
+          DSH_QT_NAPI_JOBS: 4
+        run: npm run build
+
+      - name: Verify the shipped binary
+        run: npm run verify
+
+      - name: Test
+        run: npm test
+
+      - name: Report staged binary
+        shell: bash
+        run: |
+          ls -l prebuild/*/qt-bridge.node
+          file prebuild/*/qt-bridge.node || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dsh-qt-napi-${{ matrix.os }}
+          path: prebuild/**/qt-bridge.node
+          if-no-files-found: error
+          retention-days: 14
+
+  # A missing prebuild is a degraded (not broken) host, so this job reports the
+  # matrix result without gating anything downstream.
+  summary:
+    name: summary
+    needs: build
+    if: always()
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Result
+        run: |
+          echo "build matrix: ${{ needs.build.result }}"
+          test "${{ needs.build.result }}" = "success"
