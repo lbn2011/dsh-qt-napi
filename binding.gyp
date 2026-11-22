@@ -42,15 +42,20 @@
         "vendor/cmark-gfm/extensions/tagfilter.c",
         "vendor/cmark-gfm/extensions/tasklist.c"
       ],
+      # Deliberately a static relative path: this used to be the shell substitution
+      # "<!@(node -p \"require('node-addon-api').include_dir\")", which gyp runs
+      # through cmd.exe on Windows, where the nested quoting came back empty and MSVC
+      # failed with "error C1083: Cannot open include file: 'napi.h'". The value it
+      # returned was already "node_modules/node-addon-api", so hardcoding it changes
+      # nothing on POSIX. The companion "dependencies" substitution on
+      # node-addon-api's node_api.gyp is gone too: that file only declares a stub
+      # "nothing" target and supplies no include_dirs and no defines.
       "include_dirs": [
-        "<!@(node -p \"require('node-addon-api').include_dir\")",
+        "node_modules/node-addon-api",
         "src",
         "vendor/cmark-gfm/gen",
         "vendor/cmark-gfm/src",
         "vendor/cmark-gfm/extensions"
-      ],
-      "dependencies": [
-        "<!(node -p \"require('node-addon-api').gyp\")"
       ],
       "defines": [
         "NAPI_VERSION=8",
