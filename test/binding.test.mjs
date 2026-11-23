@@ -9,6 +9,7 @@
  */
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import { join, resolve } from 'node:path'
 
 // `index.js` is CommonJS (it must be loadable by `require()` from the Qt app's
 // loader), so named-import extraction does not work for getter-backed exports.
@@ -382,19 +383,19 @@ describe('escapeHtml', () => {
 describe('discovery and failure handling', () => {
   it('prefers DSH_QT_NAPI_PATH over the staged prebuild', () => {
     const paths = candidatePaths({ env: { DSH_QT_NAPI_PATH: '/tmp/override/node' } })
-    assert.equal(paths[0], '/tmp/override/node/prebuild/' + prebuildTriple() + '/qt-bridge.node')
+    assert.equal(paths[0], resolve('/tmp/override/node', 'prebuild', prebuildTriple(), 'qt-bridge.node'))
     assert.match(paths[1], /prebuild/)
   })
 
   it('accepts a direct .node path in DSH_QT_NAPI_PATH', () => {
     const paths = candidatePaths({ env: { DSH_QT_NAPI_PATH: '/tmp/x/qt-bridge.node' } })
-    assert.equal(paths[0], '/tmp/x/qt-bridge.node')
+    assert.equal(paths[0], resolve('/tmp/x/qt-bridge.node'))
   })
 
   it('orders prebuild before a local build', () => {
     const paths = candidatePaths({ env: {} })
     const prebuild = paths.findIndex((p) => p.includes('prebuild'))
-    const local = paths.findIndex((p) => p.includes('build/Release'))
+    const local = paths.findIndex((p) => p.includes(join('build', 'Release')))
     assert.ok(prebuild >= 0 && local >= 0 && prebuild < local)
   })
 

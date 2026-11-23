@@ -16,7 +16,7 @@ import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import napi from '../index.js'
 
@@ -32,7 +32,7 @@ const haveLoader = existsSync(loaderPath)
 /** Loads the host loader, or fails with a pointer to the build command. */
 async function loadHostLoader() {
   assert.ok(haveLoader, `missing ${loaderPath}; run "pnpm -C dsh-qt-app build" first`)
-  return import(loaderPath)
+  return import(pathToFileURL(loaderPath).href)
 }
 
 /** Awaits a value that may or may not be a promise. */
@@ -122,7 +122,7 @@ describe('cross-parser AST parity', () => {
       t.skip(`missing ${fallbackParserPath}; run "pnpm -C dsh-qt-app build" first`)
       return
     }
-    const fallback = await import(fallbackParserPath)
+    const fallback = await import(pathToFileURL(fallbackParserPath).href)
     for (const [name, markdown] of Object.entries(samples)) {
       const native = canonical(napi.parse(markdown))
       const pure = canonical(fallback.parseMarkdown(markdown).toJSON())
@@ -135,7 +135,7 @@ describe('cross-parser AST parity', () => {
       t.skip(`missing ${fallbackParserPath}; run "pnpm -C dsh-qt-app build" first`)
       return
     }
-    const fallback = await import(fallbackParserPath)
+    const fallback = await import(pathToFileURL(fallbackParserPath).href)
     const markdown = '- [x] done\n- [ ] todo\n'
 
     // Native: GFM task-list extension reports checkbox state per item.
